@@ -1,5 +1,6 @@
-const urlsToCache = [
+const FILES_TO_CACHE = [
     "/",
+    "/index.html",
     "/indexDb.js",
     "/index.js",
     "/styles.css",
@@ -9,17 +10,34 @@ const urlsToCache = [
    
 ];
 
-const CACHE_NAME = "static-files-v1";
-const DATA_CACHE_NAME = "data-cache-v2";
+const CACHE_NAME = "static-cache-v2";
+const DATA_CACHE_NAME = "data-cache-v1";
+
 
 self.addEventListener("install", function (event) {
 
     event.waitUntil(
         caches.open(CACHE_NAME).then(function (cache) {
-            console.log("Opened cache");
-            return cache.addAll(urlsToCache);
+            console.log("Your files were pre-cached successfully!");
+            return cache.addAll(FILES_TO_CACHE);
         })
     );
+    self.skipWaiting();
+});
+self.addEventListener("activate", function(evt) {
+    evt.waitUntil(
+      caches.keys().then(keyList => {
+        return Promise.all(
+          keyList.map(key => {
+            if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+              console.log("Removed", key);
+              return caches.delete(key);
+            }
+          })
+        );
+      })
+    );
+    self.clients.claim();
 });
 
 self.addEventListener("fetch", function (event) {
